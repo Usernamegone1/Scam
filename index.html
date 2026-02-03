@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Secure Verification</title>
+  <style>
+    body { font-family: system-ui, Arial; background:#0b1220; color:#e6edf7; margin:0; }
+    .wrap { max-width: 720px; margin: 60px auto; padding: 24px; }
+    .card { background:#121b2e; border:1px solid #23314f; border-radius:16px; padding:22px; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+    h1 { margin:0 0 10px; font-size: 22px; }
+    p { margin: 10px 0; line-height: 1.5; color:#cbd6ea; }
+    button { border:0; background:#2f6bff; color:white; padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600; }
+    button:active { transform: translateY(1px); }
+    .row { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    .pill { background:#0b1220; border:1px solid #23314f; padding:8px 10px; border-radius:999px; font-size: 12px; color:#cbd6ea; }
+    .bar { height:10px; background:#0b1220; border:1px solid #23314f; border-radius:999px; overflow:hidden; margin:12px 0 6px; }
+    .fill { height:100%; width:0%; background:#2f6bff; transition: width .25s ease; }
+    .hidden { display:none; }
+    .ok { color:#87ffb1; }
+    .warn { color:#ffd36e; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Secure Verification</h1>
+      <p>This page performs a quick device integrity scan before continuing.</p>
+
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <p id="status" class="warn">Ready to scan.</p>
+
+      <div class="row" id="facts"></div>
+
+      <div class="row" style="margin-top:16px;">
+        <button id="start">Start Scan</button>
+        <button id="reveal" class="hidden">Continue</button>
+      </div>
+
+      <div id="gotcha" class="hidden" style="margin-top:16px;">
+        <h1 class="ok">😂 Gotcha!</h1>
+        <p>No worries—this page didn’t collect or send anything. It only displayed basic browser info that your own device shows to any website.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fill = document.getElementById("fill");
+    const statusEl = document.getElementById("status");
+    const factsEl = document.getElementById("facts");
+    const startBtn = document.getElementById("start");
+    const revealBtn = document.getElementById("reveal");
+    const gotcha = document.getElementById("gotcha");
+
+    function pill(label, value) {
+      const d = document.createElement("div");
+      d.className = "pill";
+      d.textContent = `${label}: ${value}`;
+      return d;
+    }
+
+    function loadFacts() {
+      factsEl.innerHTML = "";
+      factsEl.append(
+        pill("Browser", navigator.userAgent.split(") ")[0] + ")"),
+        pill("Language", navigator.language || "unknown"),
+        pill("Timezone", Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown"),
+        pill("Screen", `${screen.width}×${screen.height}`),
+        pill("Window", `${window.innerWidth}×${window.innerHeight}`),
+        pill("Platform", navigator.platform || "unknown")
+      );
+    }
+
+    function setProgress(pct, msg, cls="warn") {
+      fill.style.width = pct + "%";
+      statusEl.textContent = msg;
+      statusEl.className = cls;
+    }
+
+    startBtn.addEventListener("click", async () => {
+      startBtn.disabled = true;
+      loadFacts();
+
+      const steps = [
+        ["Checking certificates", 20],
+        ["Validating session", 45],
+        ["Verifying device signals", 70],
+        ["Finalizing", 95],
+        ["Complete", 100],
+      ];
+
+      for (const [msg, pct] of steps) {
+        setProgress(pct, msg + "…");
+        await new Promise(r => setTimeout(r, 650));
+      }
+
+      setProgress(100, "Scan complete. Click Continue.", "ok");
+      revealBtn.classList.remove("hidden");
+    });
+
+    revealBtn.addEventListener("click", () => {
+      gotcha.classList.remove("hidden");
+      revealBtn.disabled = true;
+    });
+
+    // Show facts immediately too
+    loadFacts();
+  </script>
+</body>
+</html>
